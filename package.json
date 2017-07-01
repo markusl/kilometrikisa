@@ -1,0 +1,33 @@
+{
+  "name": "kilometrikisa",
+  "version": "0.0.1",
+  "description": "Provides access to Kilometrikisa.fi information",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --compilers js:babel-core/register test/*.js"
+  },
+  "devDependencies": {
+    "chai": "^4.0.2",
+    "chai-as-promised": "^7.0.0",
+    "cheerio-without-node-native": "^0.20.2",
+    "mocha": "^3.4.2"
+  },
+  "dependencies": {
+    "babel-core": "^6.25.0",
+    "babel-loader": "^7.1.1",
+    "babel-polyfill": "^6.23.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-latest": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "cookieparser": "^0.1.0",
+    "htmlparser2-without-node-native": "3.9.0",
+    "http": "0.0.0",
+    "node-fetch": "^2.0.0-alpha.5",
+    "query-string": "^4.3.4"
+  },
+  "keywords": [
+    "kilometrikisa"
+  ],
+  "author": "Markus Lindqvist",
+  "license": "ISC"
+}
