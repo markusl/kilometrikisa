@@ -37,6 +37,7 @@ describe('kilometrikisa tests', function() {
 
   it('login', async function() {
     const session = await Kilometrikisa.login(kktestLogin, kktestPw);
+    console.log(session);
     expect(session.csrftoken).to.have.length(32);
     expect(session.sessionid).to.have.length(32);
   });

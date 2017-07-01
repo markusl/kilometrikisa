@@ -2,9 +2,9 @@
 import 'babel-core/register';
 import 'babel-polyfill';
 import * as cheerio from 'cheerio-without-node-native';
-import fetch from 'node-fetch';
 import queryString from 'query-string';
 import * as cookieparser from 'cookieparser';
+import * as axios from 'axios';
 
 const kkPageUrlStart = 'https://www.kilometrikisa.fi';
 const accountPageUrl = kkPageUrlStart + '/accounts/index/';
@@ -30,8 +30,8 @@ const getHeaders = (tokens) => {
 
 /** First part of the login process. Fetch the csrftoken needed for Login */
 export function getKkLoginToken() {
-  return fetch(loginPageUrl)
-    .then((response) => response.text())
+  return axios.get(loginPageUrl)
+    .then((response) => response.data)
     .then((response) => new Promise((res, rej) => {
         const loginFormTokenStart = "value=\"";
         const loginFormTokenEnd = "\">";
@@ -53,19 +53,18 @@ const doKkLogin = (username, password, csrftoken) => {
     next: ""
   });
 
-  return fetch(loginPageUrl, {
-      method: 'POST',
+  return axios.post(loginPageUrl, body, {
       headers: getHeaders(['csrftoken=' + csrftoken]),
-      redirect: 'manual',
-      body: body
+      maxRedirects: 0
     })
-    .then((response) => {
+    .catch((response) => {
       return new Promise((res, rej) => {
-        const success = response.headers.has('set-cookie') &&
-          response.headers.has('location');
+        const cookies = response.response.headers['set-cookie'];
+        const success = cookies !== undefined && cookies.length === 2;
         if(success) {
-          const cookies = cookieparser.parse(response.headers.get('set-cookie'));
-          res({ csrftoken : cookies.csrftoken, sessionid : cookies.sessionid });
+          const cookie1 = cookieparser.parse(cookies[0]);
+          const cookie2 = cookieparser.parse(cookies[1]);
+          res({ csrftoken : cookie1.csrftoken, sessionid : cookie2.sessionid });
         } else {
           rej("Failed request: " + response.headers);
         }
@@ -83,10 +82,10 @@ export function login(username, password) {
 
 /* Fetch url to own team page. */
 export function fetchTeamUrl(session) {
-  return fetch(accountPageUrl, {
+  return axios.get(accountPageUrl, {
       headers: getHeaders(['sessionid=' + session.sessionid, ' csrftoken=' + session.csrftoken])
   })
-  .then((response) => response.text())
+  .then((response) => response.data)
   .then((response) => {
     return new Promise((res, rej) => {
       const $ = cheerio.load(response, { normalizeWhitespace: true });
@@ -104,10 +103,10 @@ export function fetchTeamResults(session) {
   };
   return fetchTeamUrl(session)
     .then(([session, teamUrl]) => {
-      return fetch(kkPageUrlStart + teamUrl, {
+      return axios.get(kkPageUrlStart + teamUrl, {
           headers: getHeaders(['sessionid=' + session.sessionid, ' csrftoken=' + session.csrftoken])
       })})
-    .then((response) => response.text())
+    .then((response) => response.data)
     .then((response) => {
       return new Promise((res, rej) => {
         const c = cheerio.load(response, { normalizeWhitespace: false });
@@ -144,8 +143,8 @@ export function getTeamInfoPage(page, n = 0) {
     return name.trim();
   };
   const pageUrl = page + '&page=' + (n+1);
-  return fetch(pageUrl)
-    .then((response) => response.text())
+  return axios.get(pageUrl)
+    .then((response) => response.data)
     .then((response) => {
         const $ = cheerio.load(response, { normalizeWhitespace: true });
 
