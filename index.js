@@ -3,7 +3,6 @@ import 'babel-core/register';
 import 'babel-polyfill';
 import * as cheerio from 'cheerio-without-node-native';
 import queryString from 'query-string';
-import * as cookieparser from 'cookieparser';
 import * as axios from 'axios';
 import * as R from 'ramda';
 
@@ -39,14 +38,14 @@ const getHeaders = (tokens) => ({
 export const getKkLoginToken = () =>
   axios.get(loginPageUrl)
     .then((response) => response.data)
-    .then((response) => new Promise((res, rej) => {
+    .then((response) => {
         const loginFormTokenStart = "value=\"";
         const loginFormTokenEnd = "\">";
         const $ = cheerio.load(response);
         const loginForm = $('form').html();
         const csrftoken = loginForm.substring(loginForm.indexOf(loginFormTokenStart) + loginFormTokenStart.length, loginForm.indexOf(loginFormTokenEnd));
-        res(csrftoken)
-      }));
+        return csrftoken;
+      });
 
 /** Second part of the login process where the credentials are sent with the csrfToken. */
 const doKkLogin = (username, password, csrftoken) => {
@@ -127,7 +126,6 @@ export const fetchTeamUrl = () =>
       return new Promise((res, rej) => {
         const $ = cheerio.load(response, { normalizeWhitespace: true });
         const linkList = $('.tm-box').find('div').children();
-        console.log('fetchTeamUrl ' + linkList.length);
         if(linkList.length === 4) {
           res(linkList[2].attribs.href);
         } else {
@@ -140,7 +138,7 @@ const onlyNumbers = (str) => str.replace(/[^\d.,-]/g, '').replace(',', '.');
 const trimPersonName = (name) => name.trim().split('\n')[0].trim();
 
 /* Fetch own team results. Currently Kilometrikisa does not let access other team's data. */
-export const fetchTeamResults = (session) =>
+export const fetchTeamResults = () =>
   fetchTeamUrl()
     .then((teamUrl) => {
       return axios.get(kkPageUrlStart + teamUrl, axiosRequestWithAuth)
@@ -200,7 +198,7 @@ export const getTeamInfoPage = (page, n = 0) => {
         }
       });
 
-      return new Promise((res, rej) => res(infos.get()));
+      return infos.get();
     });
 }
 

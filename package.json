@@ -7,10 +7,12 @@
     "test": "mocha --compilers js:babel-core/register test/*.js"
   },
   "devDependencies": {
+    "@3846masa/axios-cookiejar-support": "0.0.5",
     "chai": "^4.0.2",
     "chai-as-promised": "^7.0.0",
+    "eslint": "^4.2.0",
+    "eslint-config-google": "^0.9.1",
     "mocha": "^3.4.2",
-    "@3846masa/axios-cookiejar-support": "0.0.5",
     "tough-cookie": "^2.3.2"
   },
   "dependencies": {
@@ -22,7 +24,6 @@
     "babel-preset-latest": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
     "cheerio-without-node-native": "^0.20.2",
-    "cookieparser": "^0.1.0",
     "htmlparser2-without-node-native": "3.9.0",
     "query-string": "^4.3.4",
     "ramda": "^0.24.1",
