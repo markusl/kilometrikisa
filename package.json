@@ -1,6 +1,6 @@
 {
   "name": "kilometrikisa",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Provides access to Kilometrikisa.fi information",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,9 @@
   "devDependencies": {
     "chai": "^4.0.2",
     "chai-as-promised": "^7.0.0",
-    "mocha": "^3.4.2"
+    "mocha": "^3.4.2",
+    "@3846masa/axios-cookiejar-support": "0.0.5",
+    "tough-cookie": "^2.3.2"
   },
   "dependencies": {
     "axios": "^0.16.2",
@@ -22,7 +24,9 @@
     "cheerio-without-node-native": "^0.20.2",
     "cookieparser": "^0.1.0",
     "htmlparser2-without-node-native": "3.9.0",
-    "query-string": "^4.3.4"
+    "query-string": "^4.3.4",
+    "ramda": "^0.24.1",
+    "react-native-axios": "0.17.1"
   },
   "keywords": [
     "kilometrikisa"
