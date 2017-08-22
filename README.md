@@ -56,3 +56,10 @@ Kilometrikisa.login('username', 'password')
     console.log(teamResults.results);
 });
 ```
+
+### Update information to the contest log.
+
+```javascript
+Kilometrikisa.login('username', 'password')
+  .then(() => Kilometrikisa.updateLog('2017-08-22', 100.5))
+```

@@ -1,14 +1,18 @@
 'use strict';
-require("babel-core/register");
-require("babel-polyfill");
+require('babel-core/register');
+require('babel-polyfill');
 
 import * as Kilometrikisa from '../index';
 import * as chai from 'chai';
 import axiosCookieJarSupport from '@3846masa/axios-cookiejar-support';
 import * as tough from 'tough-cookie';
+import chaiAsPromised from 'chai-as-promised';
+
+chai.use(chaiAsPromised);
 
 chai.should();
 const expect = chai.expect;
+const assert = chai.assert;
 
 const kktestLogin = 'kilometrikisatesti';
 const kktestPw = 'kilometrikisatesti';
@@ -22,47 +26,77 @@ describe('kilometrikisa tests', function() {
   });
 
   it('login', async function() {
-    this.timeout(5000);
+    this.timeout(10000);
     const user = await Kilometrikisa.login(kktestLogin, kktestPw);
     expect(user.firstname).to.equal('Kilometri');
     expect(user.lastname).to.equal('Kisa');
   });
 
   it('fetchUserResults', async function() {
-    this.timeout(5500);
+    this.timeout(10000);
     return Kilometrikisa.login(kktestLogin, kktestPw)
       .then(() => Kilometrikisa.fetchUserResults())
-      .then(results => {
+      .then((results) => {
         expect(results.length).to.be.at.least(50);
         const totalKm = results.reduce((s, v) => s + v.km, 0);
         expect(totalKm).to.be.at.least(450);
-        console.log(totalKm + " km driven");
+        expect(totalKm).to.be.at.most(500);
+        console.log(totalKm + ' km driven');
     });
   });
 
-  it('getKkLoginToken', async () => {
+  it('updateLog', async function() {
+    this.timeout(15000);
+    return Kilometrikisa.login(kktestLogin, kktestPw)
+      .then(() => Kilometrikisa.updateLog('2017-08-22', 100.5))
+      .then(() => Kilometrikisa.fetchUserResults())
+      .then((results) => {
+        expect(results.length).to.be.at.least(50);
+        const totalKm = results.reduce((s, v) => s + v.km, 0);
+        expect(totalKm).to.be.at.least(550);
+        console.log(totalKm + ' km driven after update!');
+      })
+      .then(() => Kilometrikisa.updateLog('2017-08-22', '0'));
+  });
+
+  it('updateLog incorrect date', async function() {
+    this.timeout(10000);
+    return assert.isRejected(Kilometrikisa.login(kktestLogin, kktestPw)
+        .then(() => Kilometrikisa.updateLog('2017-01-22', 100.5))
+        .then(() => Kilometrikisa.fetchUserResults())
+        .then((results) => {
+          expect(results.length).to.be.at.least(50);
+          const totalKm = results.reduce((s, v) => s + v.km, 0);
+          expect(totalKm).to.be.at.least(550);
+          console.log(totalKm + ' km driven after update!');
+        })
+      );
+  });
+
+  it('getKkLoginToken', async function() {
+    this.timeout(10000);
     const token = await Promise.resolve(Kilometrikisa.getKkLoginToken());
     expect(token).to.have.length(32);
   });
 
-  it('getTeamInfoPage', async () => {
-    this.timeout(4500);
+  it('getTeamInfoPage', async function() {
+    this.timeout(10000);
     const teams = await Kilometrikisa.getTeamInfoPage(Kilometrikisa.allTeamsTopListPage);
     expect(teams).to.have.length(50);
     console.log(teams[0]);
   });
 
-  it('getTeamInfoPages', async () => {
+  it('getTeamInfoPages', async function() {
+    this.timeout(10000);
     const n = 4;
     const teams = await Kilometrikisa.getTeamInfoPages(Kilometrikisa.allTeamsTopListPage, n);
     console.log(teams[99]);
-    expect(teams).to.have.length(n * 50)
+    expect(teams).to.have.length(n * 50);
   });
 
   it('fetchProfilePage fails', async function() {
-    this.timeout(4000);
-    return Kilometrikisa.fetchProfilePage(kktestLogin, kktestPw).then(user =>
-    {
+    this.timeout(10000);
+    return Kilometrikisa.fetchProfilePage(kktestLogin, kktestPw).then((user) => {
       expect('should have failed').to.equal('');
     }).catch(() => {
       console.log('fetchProfilePage failed as expected');
@@ -70,27 +104,28 @@ describe('kilometrikisa tests', function() {
   });
 
   it('login fail', async function() {
+    this.timeout(10000);
     return Kilometrikisa.login('invaliduser', 'invalidpw')
       .then(() => {
-        expect("should have failed").to.be("");
+        expect('should have failed').to.be('');
       })
       .catch(() => console.log('Login failed as expected'));
   });
 
   it('fetchTeamUrl', async function() {
-    this.timeout(5500);
+    this.timeout(10000);
     return Kilometrikisa.login(kktestLogin, kktestPw)
       .then(() => Kilometrikisa.fetchTeamUrl())
-      .then(teamUrl => {
-        expect(teamUrl).to.equal("/teams/joukkue1234/kilometrikisa-2017");
+      .then((teamUrl) => {
+        expect(teamUrl).to.equal('/teams/joukkue1234/kilometrikisa-2017');
     });
   });
 
   it('fetchTeam', async function() {
-    this.timeout(6500);
+    this.timeout(10000);
     return Kilometrikisa.login(kktestLogin, kktestPw)
       .then(() => Kilometrikisa.fetchTeamResults())
-      .then(teamResults => {
+      .then((teamResults) => {
         expect(teamResults.name).to.equal('joukkue1234');
         expect(teamResults.results).to.have.length(1);
         expect(teamResults.results[0].rank).to.equal(1);
