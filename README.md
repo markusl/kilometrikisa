@@ -4,6 +4,25 @@ This module will enable you to easily access information on the [Kilometrikisa](
 
 ## Usage
 
+### Setup the cookie jar
+
+Before using the library, you might need to configure a cookie
+jar for storing the cookies needed for logging in.
+
+```javascript
+import * as Kilometrikisa from 'kilometrikisa';
+import axiosCookieJarSupport from '@3846masa/axios-cookiejar-support';
+import * as tough from 'tough-cookie';
+
+// Setup cookie jar
+const cookieJar = new tough.CookieJar();
+Kilometrikisa.setupAxiosCookieJar(axiosCookieJarSupport, cookieJar);
+
+// Use library
+Kilometrikisa.login('username', 'password')
+  .then(user => ...);
+```
+
 ### Log in and fetch basic user information
 
 ```javascript
@@ -62,4 +81,5 @@ Kilometrikisa.login('username', 'password')
 ```javascript
 Kilometrikisa.login('username', 'password')
   .then(() => Kilometrikisa.updateLog('2017-08-22', 100.5))
+  .then(() => console.log('Log updated'));
 ```

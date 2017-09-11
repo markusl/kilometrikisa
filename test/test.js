@@ -1,7 +1,5 @@
 'use strict';
-require('babel-core/register');
-require('babel-polyfill');
-
+import 'babel-polyfill';
 import * as Kilometrikisa from '../index';
 import * as chai from 'chai';
 import axiosCookieJarSupport from '@3846masa/axios-cookiejar-support';

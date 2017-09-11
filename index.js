@@ -1,6 +1,4 @@
 'use strict';
-import 'babel-core/register';
-import 'babel-polyfill';
 import * as cheerio from 'cheerio-without-node-native';
 import queryString from 'query-string';
 import * as axios from 'axios';
