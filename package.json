@@ -7,7 +7,6 @@
     "test": "mocha --compilers js:babel-core/register test/*.js"
   },
   "devDependencies": {
-    "@3846masa/axios-cookiejar-support": "0.0.5",
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
     "babel-polyfill": "^6.26.0",
@@ -21,6 +20,7 @@
     "tough-cookie": "^2.3.2"
   },
   "dependencies": {
+    "@3846masa/axios-cookiejar-support": "0.0.5",
     "axios": "^0.16.2",
     "cheerio-without-node-native": "^0.20.2",
     "htmlparser2-without-node-native": "3.9.0",

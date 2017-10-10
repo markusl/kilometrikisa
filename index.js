@@ -3,11 +3,13 @@ import * as cheerio from 'cheerio-without-node-native';
 import queryString from 'query-string';
 import * as axios from 'axios';
 import * as R from 'ramda';
+import axiosCookieJarSupport from '@3846masa/axios-cookiejar-support';
 
 const contestId = 22; // TODO Make dynamic
 const kkPageUrlStart = 'https://www.kilometrikisa.fi';
 const accountPageUrl = kkPageUrlStart + '/accounts/index/';
 const loginPageUrl = kkPageUrlStart + '/accounts/login/';
+const myTeamsUrl = kkPageUrlStart + '/accounts/myteams/';
 const profilePageUrl = kkPageUrlStart + '/accounts/profile/';
 const jsonDataUrlStart = kkPageUrlStart + '/contest/log_list_json/' + contestId + '/';
 const updateLogPageUrl = kkPageUrlStart + '/contest/log-save/';
@@ -19,10 +21,13 @@ export const smallTeamsTopListPage = kkPageUrlStart + '/contests/kilometrikisa-'
 export const largeTeamsTopListPage = kkPageUrlStart + '/contests/kilometrikisa-' + currentYear + '/teams/large/?sort=rank&order=asc';
 export const powerTeamsTopListPage = kkPageUrlStart + '/contests/kilometrikisa-' + currentYear + '/teams/power/?sort=rank&order=asc';
 
+axiosCookieJarSupport(axios);
 let axiosRequestWithAuth = { withCredentials: true, jar: undefined };
 
-export const setupAxiosCookieJar = (setupJarToAxios, jar) => {
-  setupJarToAxios(axios);
+/** Set the cookie jar to use with axios requests.
+ * @param {object} jar The cookie jar to use.
+ * @return {undefined} */
+export const setAxiosCookieJar = (jar) => {
   axiosRequestWithAuth.jar = jar;
 };
 
@@ -133,7 +138,10 @@ export const fetchProfilePage = () =>
       });
     });
 
-/* Login to Kilometrikisa site and returns basic user information. */
+/** Login to Kilometrikisa site and returns basic user information.
+ * @param {string} username The username to log in with.
+ * @param {string} password The password to log in with.
+ * @return {Promise} Promise of the user profile info. */
 export const login = (username, password) =>
   getKkLoginToken()
     .then((token) => doKkLogin(username, password, token))
@@ -153,6 +161,25 @@ export const fetchUserResults = (year = currentYear) =>
   axios.get(getDataUrl(year), axiosRequestWithAuth)
     .then((response) => response.data)
     .then(mapUserResults);
+
+export const getContests = () =>
+  axios.get(myTeamsUrl, axiosRequestWithAuth)
+    .then((response) => response.data)
+    .then((response) => {
+      const $ = cheerio.load(response, { normalizeWhitespace: false });
+      const contestRows = $('#teams').find('tbody').children();
+      const results = contestRows
+        .map((i, elem) => {
+          const columns = toColumns($, elem);
+          return {
+            teamName: columns[0].trim(),
+            contest: columns[1],
+            time: columns[2],
+          };
+        }
+      );
+      return results;
+    });
 
 /** Fetch url to own team page.
  * @return {Promise} */

@@ -2,7 +2,6 @@
 import 'babel-polyfill';
 import * as Kilometrikisa from '../index';
 import * as chai from 'chai';
-import axiosCookieJarSupport from '@3846masa/axios-cookiejar-support';
 import * as tough from 'tough-cookie';
 import chaiAsPromised from 'chai-as-promised';
 
@@ -16,7 +15,7 @@ const kktestLogin = 'kilometrikisatesti';
 const kktestPw = 'kilometrikisatesti';
 
 const cookieJar = new tough.CookieJar();
-Kilometrikisa.setupAxiosCookieJar(axiosCookieJarSupport, cookieJar);
+Kilometrikisa.setAxiosCookieJar(cookieJar);
 
 describe('kilometrikisa tests', function() {
   beforeEach(function(done) {
@@ -116,6 +115,18 @@ describe('kilometrikisa tests', function() {
       .then(() => Kilometrikisa.fetchTeamUrl())
       .then((teamUrl) => {
         expect(teamUrl).to.equal('/teams/joukkue1234/kilometrikisa-2017');
+    });
+  });
+
+  it('getContests', async function() {
+    this.timeout(10000);
+    return Kilometrikisa.login(kktestLogin, kktestPw)
+      .then(() => Kilometrikisa.getContests())
+      .then((result) => {
+        expect(result).to.have.length(1);
+        expect(result[0].teamName).to.equal('joukkue1234');
+        expect(result[0].contest).to.equal('Kilometrikisa 2017');
+        expect(result[0].time).to.equal('01.05.2017 – 22.09.2017');
     });
   });
 
