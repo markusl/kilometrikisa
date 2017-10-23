@@ -34,7 +34,7 @@ console.log(user);
 
 ```javascript
 Kilometrikisa.login(kktestLogin, kktestPw)
-  .then(() => Kilometrikisa.fetchUserResults())
+  .then(() => Kilometrikisa.getUserResults())
   .then(results => {
     const totalKm = results.reduce((s, v) => s + v.km, 0);
     console.log(totalKm + " km driven");
@@ -78,8 +78,20 @@ Kilometrikisa.login('username', 'password')
 
 ### Update information to the contest log.
 
+Note that this API will only work when the contest is active.
+
 ```javascript
 Kilometrikisa.login('username', 'password')
   .then(() => Kilometrikisa.updateLog('2017-08-22', 100.5))
   .then(() => console.log('Log updated'));
+```
+
+### Get the contests user has participated in
+
+```javascript
+Kilometrikisa.login('username', 'password')
+  .then(() => Kilometrikisa.getContests())
+  .then((result) => {
+    console.log(result[0].teamName + ' ' result[0].contest + ' ' + result[0].time);
+});
 ```

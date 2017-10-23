@@ -157,11 +157,13 @@ const mapUserResults = (results) =>
 /** Fetch yearly user results for the specific year or for the current year.
  * @param {number} year The year for which to fetch user results.
  * @return {object} Results for the user for the specific year. */
-export const fetchUserResults = (year = currentYear) =>
+export const getUserResults = (year = currentYear) =>
   axios.get(getDataUrl(year), axiosRequestWithAuth)
     .then((response) => response.data)
     .then(mapUserResults);
 
+/** Fetch the contests user has participated in.
+ * @return {object} List of objects containing fields teamName, contest and time. */
 export const getContests = () =>
   axios.get(myTeamsUrl, axiosRequestWithAuth)
     .then((response) => response.data)
@@ -178,7 +180,7 @@ export const getContests = () =>
           };
         }
       );
-      return results;
+      return results.toArray();
     });
 
 /** Fetch url to own team page.
