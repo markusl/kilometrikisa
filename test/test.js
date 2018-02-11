@@ -114,7 +114,7 @@ describe('kilometrikisa tests', function() {
     return Kilometrikisa.login(kktestLogin, kktestPw)
       .then(() => Kilometrikisa.fetchTeamUrl())
       .then((teamUrl) => {
-        expect(teamUrl).to.equal('/teams/joukkue1234/kilometrikisa-2017');
+        expect(teamUrl).to.equal('/teams/talvikisa-2018/talvikilometrikisa-2018');
     });
   });
 
@@ -123,10 +123,13 @@ describe('kilometrikisa tests', function() {
     return Kilometrikisa.login(kktestLogin, kktestPw)
       .then(() => Kilometrikisa.getContests())
       .then((result) => {
-        expect(result).to.have.length(1);
-        expect(result[0].teamName).to.equal('joukkue1234');
-        expect(result[0].contest).to.equal('Kilometrikisa 2017');
-        expect(result[0].time).to.equal('01.05.2017 – 22.09.2017');
+        expect(result).to.have.length(2);
+        expect(result[0].teamName).to.equal('Talvikisa 2018');
+        expect(result[0].contest).to.equal('Talvikilometrikisa 2018');
+        expect(result[0].time).to.equal('01.01.2018 – 28.02.2018');
+        expect(result[1].teamName).to.equal('joukkue1234');
+        expect(result[1].contest).to.equal('Kilometrikisa 2017');
+        expect(result[1].time).to.equal('01.05.2017 – 22.09.2017');
     });
   });
 
@@ -135,10 +138,18 @@ describe('kilometrikisa tests', function() {
     return Kilometrikisa.login(kktestLogin, kktestPw)
       .then(() => Kilometrikisa.fetchTeamResults())
       .then((teamResults) => {
-        expect(teamResults.name).to.equal('joukkue1234');
-        expect(teamResults.results).to.have.length(1);
+        expect(teamResults.name).to.equal('Talvikisa 2018');
+        expect(teamResults.results).to.have.length(2);
         expect(teamResults.results[0].rank).to.equal(1);
         console.log(teamResults);
     });
+  });
+
+  it('getAllContests', async function() {
+    this.timeout(10000);
+    const contests = await Kilometrikisa.getAllContests();
+    expect(contests.length).to.be.at.least(10);
+    expect(contests[0].name).to.equal('Talvikilometrikisa 2018');
+    expect(contests[0].link).to.equal('/contests/talvikilometrikisa-2018/teams/');
   });
 });

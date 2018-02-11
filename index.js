@@ -272,3 +272,26 @@ export const getTeamInfoPages = (page, n) =>
     [...Array(n).keys()]
     .map((n) => getTeamInfoPage(page, n)))
   .then(R.flatten);
+
+
+/** Lists all contests that are available on the site.
+ * @return {Promise} */
+export const getAllContests = () =>
+  axios.get(kkPageUrlStart)
+    .then((response) => response.data)
+    .then((response) => {
+      const $ = cheerio.load(response, { normalizeWhitespace: true });
+      const contestsMenu = $('.top-bar-section')
+        .find('ul')
+        .children()
+        .find('ul')
+        .last();
+      const contests = contestsMenu.children().map((i, elem) => {
+        const link = $(elem).children().first();
+        return {
+          name: link.text(),
+          link: link.attr('href'),
+        };
+      });
+      return contests;
+    });
