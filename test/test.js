@@ -29,10 +29,10 @@ describe('kilometrikisa tests', function() {
     expect(user.lastname).to.equal('Kisa');
   });
 
-  it('getUserResults', async function() {
+  it('getUserResults 2017', async function() {
     this.timeout(10000);
     return Kilometrikisa.login(kktestLogin, kktestPw)
-      .then(() => Kilometrikisa.getUserResults())
+      .then(() => Kilometrikisa.getUserResults(2017))
       .then((results) => {
         expect(results.length).to.be.at.least(50);
         const totalKm = results.reduce((s, v) => s + v.km, 0);
