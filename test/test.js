@@ -32,7 +32,7 @@ describe('kilometrikisa tests', function() {
   it('getUserResults 2017', async function() {
     this.timeout(10000);
     return Kilometrikisa.login(kktestLogin, kktestPw)
-      .then(() => Kilometrikisa.getUserResults(2017))
+      .then(() => Kilometrikisa.getUserResults('22', 2017))
       .then((results) => {
         expect(results.length).to.be.at.least(50);
         const totalKm = results.reduce((s, v) => s + v.km, 0);
@@ -44,23 +44,25 @@ describe('kilometrikisa tests', function() {
 
   it('updateLog', async function() {
     this.timeout(15000);
+    const contestId = await Kilometrikisa.getLatestContestId();
     return Kilometrikisa.login(kktestLogin, kktestPw)
-      .then(() => Kilometrikisa.updateLog('2017-08-22', 100.5))
-      .then(() => Kilometrikisa.fetchUserResults())
+      .then(() => Kilometrikisa.updateLog(contestId, '2018-02-17', 100.5))
+      .then(() => Kilometrikisa.getUserResults(contestId, 2018))
       .then((results) => {
-        expect(results.length).to.be.at.least(50);
+        expect(results.length).to.be.at.least(15);
         const totalKm = results.reduce((s, v) => s + v.km, 0);
-        expect(totalKm).to.be.at.least(550);
+        expect(totalKm).to.be.at.least(100);
         console.log(totalKm + ' km driven after update!');
       })
-      .then(() => Kilometrikisa.updateLog('2017-08-22', '0'));
+      .then(() => Kilometrikisa.updateLog(contestId, '2018-02-17', '0'));
   });
 
   it('updateLog incorrect date', async function() {
     this.timeout(10000);
+    const contestId = await Kilometrikisa.getLatestContestId();
     return assert.isRejected(Kilometrikisa.login(kktestLogin, kktestPw)
         .then(() => Kilometrikisa.updateLog('2017-01-22', 100.5))
-        .then(() => Kilometrikisa.fetchUserResults())
+        .then(() => Kilometrikisa.getUserResults(contestId, 2018))
         .then((results) => {
           expect(results.length).to.be.at.least(50);
           const totalKm = results.reduce((s, v) => s + v.km, 0);
@@ -78,7 +80,8 @@ describe('kilometrikisa tests', function() {
 
   it('getTeamInfoPage', async function() {
     this.timeout(10000);
-    const teams = await Kilometrikisa.getTeamInfoPage(Kilometrikisa.allTeamsTopListPage);
+    const page = await Kilometrikisa.allTeamsTopListPage();
+    const teams = await Kilometrikisa.getTeamInfoPage(page);
     expect(teams).to.have.length(50);
     console.log(teams[0]);
   });
@@ -86,7 +89,8 @@ describe('kilometrikisa tests', function() {
   it('getTeamInfoPages', async function() {
     this.timeout(10000);
     const n = 4;
-    const teams = await Kilometrikisa.getTeamInfoPages(Kilometrikisa.allTeamsTopListPage, n);
+    const page = await Kilometrikisa.allTeamsTopListPage();
+    const teams = await Kilometrikisa.getTeamInfoPages(page, n);
     console.log(teams[99]);
     expect(teams).to.have.length(n * 50);
   });
@@ -149,7 +153,27 @@ describe('kilometrikisa tests', function() {
     this.timeout(10000);
     const contests = await Kilometrikisa.getAllContests();
     expect(contests.length).to.be.at.least(10);
-    expect(contests[0].name).to.equal('Talvikilometrikisa 2018');
-    expect(contests[0].link).to.equal('/contests/talvikilometrikisa-2018/teams/');
+    expect(contests[1].name).to.equal('Koulujen kilometrikisa 2017');
+    expect(contests[1].link).to.equal('/contests/koulujen-kilometrikisa-2017/teams/');
+  });
+
+  it('getLatestContest', async function() {
+    this.timeout(10000);
+    const contest = await Kilometrikisa.getLatestContest();
+    expect(contest.name).to.equal('Talvikilometrikisa 2018');
+    expect(contest.link).to.equal('/contests/talvikilometrikisa-2018/teams/');
+  });
+
+  it('getContestId', async function() {
+    this.timeout(10000);
+    const contests = await Kilometrikisa.getAllContests();
+    const contestId = await Kilometrikisa.getContestId(contests[0].link);
+    expect(contestId).to.equal('30');
+  });
+
+  it('getLatestContestId', async function() {
+    this.timeout(10000);
+    const contestId = await Kilometrikisa.getLatestContestId();
+    expect(contestId).to.equal('30');
   });
 });

@@ -5,21 +5,15 @@ import * as axios from 'axios';
 import * as R from 'ramda';
 import axiosCookieJarSupport from '@3846masa/axios-cookiejar-support';
 
-const contestId = 22; // TODO Make dynamic
 const kkPageUrlStart = 'https://www.kilometrikisa.fi';
 const accountPageUrl = kkPageUrlStart + '/accounts/index/';
 const loginPageUrl = kkPageUrlStart + '/accounts/login/';
 const myTeamsUrl = kkPageUrlStart + '/accounts/myteams/';
 const profilePageUrl = kkPageUrlStart + '/accounts/profile/';
-const jsonDataUrlStart = kkPageUrlStart + '/contest/log_list_json/' + contestId + '/';
+const jsonDataUrlStart = (contestId) => kkPageUrlStart + '/contest/log_list_json/' + contestId + '/';
 const updateLogPageUrl = kkPageUrlStart + '/contest/log-save/';
 const summerContestStartMonth = 4;
 const summerContestEndMonth = 9;
-const currentYear = new Date().getFullYear();
-export const allTeamsTopListPage = kkPageUrlStart + '/contests/kilometrikisa-' + currentYear + '/teams/?sort=rank&order=asc';
-export const smallTeamsTopListPage = kkPageUrlStart + '/contests/kilometrikisa-' + currentYear + '/teams/small/?sort=rank&order=asc';
-export const largeTeamsTopListPage = kkPageUrlStart + '/contests/kilometrikisa-' + currentYear + '/teams/large/?sort=rank&order=asc';
-export const powerTeamsTopListPage = kkPageUrlStart + '/contests/kilometrikisa-' + currentYear + '/teams/power/?sort=rank&order=asc';
 
 axiosCookieJarSupport(axios);
 let axiosRequestWithAuth = { withCredentials: true, jar: undefined };
@@ -85,10 +79,11 @@ const doKkLogin = (username, password, csrftoken) => {
 };
 
 /** Update information in the user log.
+ * @param {string} contestId The contest id.
  * @param {string} kmDate The date in format YYYY-mm-dd
  * @param {number} kmAmount The kilometers to log for that day.
  * @return {undefined} */
-export const updateLog = (kmDate, kmAmount) =>
+export const updateLog = (contestId, kmDate, kmAmount) =>
   getKkLoginToken()
     .then((csrftoken) => {
       const body = queryString.stringify({
@@ -147,18 +142,19 @@ export const login = (username, password) =>
     .then((token) => doKkLogin(username, password, token))
     .then(fetchProfilePage);
 
-const getDataUrl = (year) => jsonDataUrlStart + '?' +
-    queryString.stringify({ start: (new Date(year, summerContestStartMonth, 1).getTime()/1000),
-                            end: (new Date(year, summerContestEndMonth, 30).getTime()/1000) });
+const getDataUrl = (contestId, year) => jsonDataUrlStart(contestId) + '?' +
+    queryString.stringify({ start: (new Date(year, 1, 1).getTime()/1000),
+                            end: (new Date(year, 12, 30).getTime()/1000) });
 
 const mapUserResults = (results) =>
   results.map((entry) => ({ date: entry.start, km: parseFloat(entry.title) } ));
 
 /** Fetch yearly user results for the specific year or for the current year.
+ * @param {string} contestId THe contest id.
  * @param {number} year The year for which to fetch user results.
  * @return {object} Results for the user for the specific year. */
-export const getUserResults = (year = currentYear) =>
-  axios.get(getDataUrl(year), axiosRequestWithAuth)
+export const getUserResults = (contestId, year) =>
+  axios.get(getDataUrl(contestId, year), axiosRequestWithAuth)
     .then((response) => response.data)
     .then(mapUserResults);
 
@@ -273,7 +269,6 @@ export const getTeamInfoPages = (page, n) =>
     .map((n) => getTeamInfoPage(page, n)))
   .then(R.flatten);
 
-
 /** Lists all contests that are available on the site.
  * @return {Promise} */
 export const getAllContests = () =>
@@ -295,3 +290,42 @@ export const getAllContests = () =>
       });
       return contests;
     });
+
+/** Get the latest available contest from the site.
+ * @return {Promise} */
+export const getLatestContest = () => getAllContests().then((contests) => contests[0]);
+
+/** Get the internal contest id for the specified contest url (returned by getAllContests).
+ * @param {string} contestUrl The contest for which to retrieve internal id.
+ * @return {Promise} */
+export const getContestId = (contestUrl) =>
+  axios.get(kkPageUrlStart + contestUrl)
+    .then((response) => response.data)
+    .then((response) => {
+      const $ = cheerio.load(response);
+      const script = $('body script').get(1).children[0].data;
+      // The only way to fetch contest id seems to be from the script
+      // where it is used internally as part of the team search :/
+      const match = script.match(/json-search\/(\d+)\//);
+      return match[1];
+    });
+
+export const getLatestContestId = () =>
+  getLatestContest()
+    .then((latestContest) => getContestId(latestContest.link));
+
+export const allTeamsTopListPage = () =>
+  getLatestContest()
+    .then((latestContest) => kkPageUrlStart + latestContest.link + '?sort=rank&order=asc');
+
+export const largeTeamsTopListPage = () =>
+  getLatestContest()
+    .then((latestContest) => kkPageUrlStart + latestContest.link + 'large/?sort=rank&order=asc');
+
+export const powerTeamsTopListPage = () =>
+getLatestContest()
+  .then((latestContest) => kkPageUrlStart + latestContest.link + 'power/?sort=rank&order=asc');
+
+export const smallTeamsTopListPage = () =>
+getLatestContest()
+  .then((latestContest) => kkPageUrlStart + latestContest.link + 'small/?sort=rank&order=asc');
