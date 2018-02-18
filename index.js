@@ -12,8 +12,6 @@ const myTeamsUrl = kkPageUrlStart + '/accounts/myteams/';
 const profilePageUrl = kkPageUrlStart + '/accounts/profile/';
 const jsonDataUrlStart = (contestId) => kkPageUrlStart + '/contest/log_list_json/' + contestId + '/';
 const updateLogPageUrl = kkPageUrlStart + '/contest/log-save/';
-const summerContestStartMonth = 4;
-const summerContestEndMonth = 9;
 
 axiosCookieJarSupport(axios);
 let axiosRequestWithAuth = { withCredentials: true, jar: undefined };
@@ -36,23 +34,21 @@ const getHeaders = (tokens) => ({
   });
 
 /** First part of the login process. Fetch the csrftoken needed for Login
-  * @return {string} the csrftoken to do other requests with */
-export const getKkLoginToken = () =>
-  axios.get(loginPageUrl)
-    .then((response) => response.data)
-    .then((response) => {
-        const loginFormTokenStart = 'value="';
-        const loginFormTokenEnd = '">';
-        const $ = cheerio.load(response);
-        const loginForm = $('form').html();
-        const csrftoken = loginForm.substring(
-          loginForm.indexOf(loginFormTokenStart) + loginFormTokenStart.length,
-          loginForm.indexOf(loginFormTokenEnd));
-        return csrftoken;
-      });
+  * @return {Promise} the csrftoken to do other requests with */
+export const getKkLoginToken = async () => {
+  const response = await axios.get(loginPageUrl);
+  const loginFormTokenStart = 'value="';
+  const loginFormTokenEnd = '">';
+  const $ = cheerio.load(response.data);
+  const loginForm = $('form').html();
+  const csrftoken = loginForm.substring(
+    loginForm.indexOf(loginFormTokenStart) + loginFormTokenStart.length,
+    loginForm.indexOf(loginFormTokenEnd));
+  return csrftoken;
+};
 
 /* Second part of the login process where the credentials are sent with the csrfToken. */
-const doKkLogin = (username, password, csrftoken) => {
+const doKkLogin = async (username, password, csrftoken) => {
   const body = queryString.stringify({
     username: username,
     password: password,
@@ -62,19 +58,17 @@ const doKkLogin = (username, password, csrftoken) => {
 
   const loginErrorReply = 'Antamasi tunnus tai salasana oli väärä';
 
-  return axios.post(loginPageUrl, body, R.merge(
+  const response = await axios.post(loginPageUrl, body, R.merge(
       { headers: getHeaders(['csrftoken=' + csrftoken]) },
-      axiosRequestWithAuth))
-    .then((response) => response.data)
-    .then((response) => {
-      return new Promise((res, rej) => {
-        const success = response.indexOf(loginErrorReply) === -1;
-        if (success) {
-          res();
-        } else {
-          rej('Request failed: ' + response.headers);
-        }
-      });
+      axiosRequestWithAuth));
+
+    return new Promise((res, rej) => {
+      const success = response.data.indexOf(loginErrorReply) === -1;
+      if (success) {
+        res();
+      } else {
+        rej('Request failed: ' + response.headers);
+      }
     });
 };
 
@@ -82,64 +76,57 @@ const doKkLogin = (username, password, csrftoken) => {
  * @param {string} contestId The contest id.
  * @param {string} kmDate The date in format YYYY-mm-dd
  * @param {number} kmAmount The kilometers to log for that day.
- * @return {undefined} */
-export const updateLog = (contestId, kmDate, kmAmount) =>
-  getKkLoginToken()
-    .then((csrftoken) => {
-      const body = queryString.stringify({
-        contest_id: contestId,
-        km_date: kmDate,
-        km_amount: kmAmount,
-        csrfmiddlewaretoken: csrftoken,
-      });
+ * @return {Promise} */
+export const updateLog = async (contestId, kmDate, kmAmount) => {
+  const csrftoken = await getKkLoginToken();
+    const body = queryString.stringify({
+      contest_id: contestId,
+      km_date: kmDate,
+      km_amount: kmAmount,
+      csrfmiddlewaretoken: csrftoken,
+    });
 
-      return axios.post(updateLogPageUrl, body, R.merge(
-          { headers: getHeaders(['csrftoken=' + csrftoken]) },
-          axiosRequestWithAuth));
-    })
-  .then((response) => response.data)
-  .then((response) =>
-    new Promise((res, rej) => {
-      if (response.status === 200) {
+  const response = await axios.post(updateLogPageUrl, body, R.merge(
+        { headers: getHeaders(['csrftoken=' + csrftoken]) },
+        axiosRequestWithAuth));
+
+  return new Promise((res, rej) => {
+      if (response.data.status === 200) {
         res();
       } else {
         rej('Request failed: ' + response);
       }
-    })
-);
+    });
+  };
 
 export const fetchProfilePage = () =>
-  axios.get(profilePageUrl, axiosRequestWithAuth)
-    .then((response) => response.data)
-    .then((response) => {
-      return new Promise((res, rej) => {
-        const $ = cheerio.load(response);
-        const requireSignIn = $('#signup').length;
-        if (requireSignIn !== 0) {
-          rej();
-        } else {
-          const firstname = $('[name=first_name]').val();
-          const lastname = $('[name=last_name]').val();
-          const email = $('[name=email]').val();
-          const nickname = $('[name=nickname]').val();
-          // const municipality_code = $('option[selected=selected]').html(); // TODO not working yet
-          res({ nickname: nickname,
-                firstname: firstname,
-                lastname: lastname,
-                email: email,
-                municipality: '',
-          });
-        }
+  (new Promise(async (res, rej) => {
+    const response = await axios.get(profilePageUrl, axiosRequestWithAuth);
+    const $ = cheerio.load(response.data);
+    const requireSignIn = $('#signup').length;
+    if (requireSignIn !== 0) {
+      rej();
+    } else {
+      const firstname = $('[name=first_name]').val();
+      const lastname = $('[name=last_name]').val();
+      const email = $('[name=email]').val();
+      const nickname = $('[name=nickname]').val();
+      // const municipality_code = $('option[selected=selected]').html(); // TODO not working yet
+      res({ nickname: nickname,
+            firstname: firstname,
+            lastname: lastname,
+            email: email,
+            municipality: '',
       });
-    });
+    }
+  }));
 
 /** Login to Kilometrikisa site and returns basic user information.
  * @param {string} username The username to log in with.
  * @param {string} password The password to log in with.
  * @return {Promise} Promise of the user profile info. */
-export const login = (username, password) =>
-  getKkLoginToken()
-    .then((token) => doKkLogin(username, password, token))
+export const login = async (username, password) =>
+  doKkLogin(username, password, await getKkLoginToken())
     .then(fetchProfilePage);
 
 const getDataUrl = (contestId, year) => jsonDataUrlStart(contestId) + '?' +
@@ -153,113 +140,102 @@ const mapUserResults = (results) =>
  * @param {string} contestId THe contest id.
  * @param {number} year The year for which to fetch user results.
  * @return {object} Results for the user for the specific year. */
-export const getUserResults = (contestId, year) =>
-  axios.get(getDataUrl(contestId, year), axiosRequestWithAuth)
-    .then((response) => response.data)
-    .then(mapUserResults);
+export const getUserResults = async (contestId, year) =>
+  mapUserResults(
+    (await axios.get(getDataUrl(contestId, year), axiosRequestWithAuth)).data);
 
-/** Fetch the contests user has participated in.
+/** Fetch the contests the logged in user has participated in.
  * @return {object} List of objects containing fields teamName, contest and time. */
-export const getContests = () =>
-  axios.get(myTeamsUrl, axiosRequestWithAuth)
-    .then((response) => response.data)
-    .then((response) => {
-      const $ = cheerio.load(response, { normalizeWhitespace: false });
-      const contestRows = $('#teams').find('tbody').children();
-      const results = contestRows
-        .map((i, elem) => {
-          const columns = toColumns($, elem);
-          return {
-            teamName: columns[0].trim(),
-            contest: columns[1],
-            time: columns[2],
-          };
-        }
-      );
-      return results.toArray();
-    });
+export const getContests = async () => {
+  const response = await axios.get(myTeamsUrl, axiosRequestWithAuth);
+  const $ = cheerio.load(response.data, { normalizeWhitespace: false });
+  const contestRows = $('#teams').find('tbody').children();
+  const results = contestRows
+    .map((i, elem) => {
+      const columns = toColumns($, elem);
+      return {
+        teamName: columns[0].trim(),
+        contest: columns[1],
+        time: columns[2],
+      };
+    }
+  );
+  return results.toArray();
+};
 
 /** Fetch url to own team page.
  * @return {Promise} */
 export const fetchTeamUrl = () =>
-  axios.get(accountPageUrl, axiosRequestWithAuth)
-    .then((response) => response.data)
-    .then((response) => {
-      return new Promise((res, rej) => {
-        const $ = cheerio.load(response, { normalizeWhitespace: true });
-        const linkList = $('.tm-box').find('div').children();
-        if (linkList.length === 4) {
-          res(linkList[2].attribs.href);
-        } else {
-          rej('User not logged in');
-        }
-      });
-    });
+  (new Promise(async (res, rej) => {
+    const response = await axios.get(accountPageUrl, axiosRequestWithAuth);
+    const $ = cheerio.load(response.data, { normalizeWhitespace: true });
+    const linkList = $('.tm-box').find('div').children();
+    if (linkList.length === 4) {
+      res(linkList[2].attribs.href);
+    } else {
+      rej('User not logged in');
+    }
+  }));
 
 const onlyNumbers = (str) => str.replace(/[^\d.,-]/g, '').replace(',', '.');
 const trimPersonName = (name) => name.trim().split('\n')[0].trim();
 
 /* Fetch own team results. Currently Kilometrikisa does not let access other team's data. */
-export const fetchTeamResults = () =>
-  fetchTeamUrl()
-    .then((teamUrl) => axios.get(kkPageUrlStart + teamUrl, axiosRequestWithAuth))
-    .then((response) => response.data)
-    .then((response) => {
-      const $ = cheerio.load(response, { normalizeWhitespace: false });
+export const fetchTeamResults = async () => {
+  const teamUrl = await fetchTeamUrl();
+  const response = await axios.get(kkPageUrlStart + teamUrl, axiosRequestWithAuth);
+  const $ = cheerio.load(response.data, { normalizeWhitespace: false });
 
-      const teamName = $('.widget').find('h4').first().text().trim();
-      const teamRank = parseInt(onlyNumbers($('.team-contest-table').find('strong').html()));
+  const teamName = $('.widget').find('h4').first().text().trim();
+  const teamRank = parseInt(onlyNumbers($('.team-contest-table').find('strong').html()));
 
-      const teamRows = $('div[data-slug="my-team"]').find('tbody').children();
-      const results = teamRows
-        .map((i, elem) => {
-          // Team admin has a user email column visible
-          $('.memberEmail', elem).parent().remove();
-          const columns = toColumns($, elem);
-          return {
-            rank: parseInt(columns[0]),
-            name: trimPersonName(columns[1]),
-            km: parseFloat(onlyNumbers(columns[2])),
-            days: parseInt(onlyNumbers(columns[3])),
-          };
-      });
+  const teamRows = $('div[data-slug="my-team"]').find('tbody').children();
+  const results = teamRows
+    .map((i, elem) => {
+      // Team admin has a user email column visible
+      $('.memberEmail', elem).parent().remove();
+      const columns = toColumns($, elem);
       return {
-        name: teamName,
-        rank: teamRank,
-        results: results.get(),
+        rank: parseInt(columns[0]),
+        name: trimPersonName(columns[1]),
+        km: parseFloat(onlyNumbers(columns[2])),
+        days: parseInt(onlyNumbers(columns[3])),
       };
-    });
+  });
+  return {
+    name: teamName,
+    rank: teamRank,
+    results: results.get(),
+  };
+};
 
 /* Get single page of general team statistics for given contest. */
-export const getTeamInfoPage = (page, n = 0) => {
+export const getTeamInfoPage = async (page, n = 0) => {
   const cleanTeamName = (name) => {
     name = name.replace(' TOP-10', '');
     name = name.substring(0, name.lastIndexOf('('));
     return name.trim();
   };
   const pageUrl = page + '&page=' + (n+1);
-  return axios.get(pageUrl)
-    .then((response) => response.data)
-    .then((response) => {
-      const $ = cheerio.load(response, { normalizeWhitespace: true });
+  const response = await axios.get(pageUrl);
+  const $ = cheerio.load(response.data, { normalizeWhitespace: true });
 
-      const resultTable = $('.result-table').find('tbody');
-      const rows = resultTable.children();
-      const infos = rows.map((i, elem) => {
-        // Logged in user has favorite column first
-        $('td > .favorite-form', elem).parent().remove();
-        const columns = toColumns($, elem);
-        return {
-          rank: parseInt(columns[0].trim()),
-          name: cleanTeamName(columns[1]),
-          kmpp: parseFloat(onlyNumbers(columns[2])),
-          kmTotal: parseFloat(onlyNumbers(columns[3])),
-          days: parseFloat(onlyNumbers(columns[4])),
-        };
-      });
+  const resultTable = $('.result-table').find('tbody');
+  const rows = resultTable.children();
+  const infos = rows.map((i, elem) => {
+    // Logged in user has favorite column first
+    $('td > .favorite-form', elem).parent().remove();
+    const columns = toColumns($, elem);
+    return {
+      rank: parseInt(columns[0].trim()),
+      name: cleanTeamName(columns[1]),
+      kmpp: parseFloat(onlyNumbers(columns[2])),
+      kmTotal: parseFloat(onlyNumbers(columns[3])),
+      days: parseFloat(onlyNumbers(columns[4])),
+    };
+  });
 
-      return infos.get();
-    });
+  return infos.get();
 };
 
 /* Get n first pages of team statistics */
@@ -271,61 +247,53 @@ export const getTeamInfoPages = (page, n) =>
 
 /** Lists all contests that are available on the site.
  * @return {Promise} */
-export const getAllContests = () =>
-  axios.get(kkPageUrlStart)
-    .then((response) => response.data)
-    .then((response) => {
-      const $ = cheerio.load(response, { normalizeWhitespace: true });
-      const contestsMenu = $('.top-bar-section')
-        .find('ul')
-        .children()
-        .find('ul')
-        .last();
-      const contests = contestsMenu.children().map((i, elem) => {
-        const link = $(elem).children().first();
-        return {
-          name: link.text(),
-          link: link.attr('href'),
-        };
-      });
-      return contests;
-    });
+export const getAllContests = async () => {
+  const response = await axios.get(kkPageUrlStart);
+  const $ = cheerio.load(response.data, { normalizeWhitespace: true });
+  const contestsMenu = $('.top-bar-section')
+    .find('ul')
+    .children()
+    .find('ul')
+    .last();
+  const contests = contestsMenu.children().map((i, elem) => {
+    const link = $(elem).children().first();
+    return {
+      name: link.text(),
+      link: link.attr('href'),
+    };
+  });
+  return contests;
+};
 
 /** Get the latest available contest from the site.
  * @return {Promise} */
-export const getLatestContest = () => getAllContests().then((contests) => contests[0]);
+export const getLatestContest = async () =>
+  (await getAllContests())[0];
 
 /** Get the internal contest id for the specified contest url (returned by getAllContests).
  * @param {string} contestUrl The contest for which to retrieve internal id.
  * @return {Promise} */
-export const getContestId = (contestUrl) =>
-  axios.get(kkPageUrlStart + contestUrl)
-    .then((response) => response.data)
-    .then((response) => {
-      const $ = cheerio.load(response);
-      const script = $('body script').get(1).children[0].data;
-      // The only way to fetch contest id seems to be from the script
-      // where it is used internally as part of the team search :/
-      const match = script.match(/json-search\/(\d+)\//);
-      return match[1];
-    });
+export const getContestId = async (contestUrl) => {
+  const response = await axios.get(kkPageUrlStart + contestUrl);
+  const $ = cheerio.load(response.data);
+  const script = $('body script').get(1).children[0].data;
+  // The only way to fetch contest id seems to be from the script
+  // where it is used internally as part of the team search :/
+  const match = script.match(/json-search\/(\d+)\//);
+  return match[1];
+};
 
-export const getLatestContestId = () =>
-  getLatestContest()
-    .then((latestContest) => getContestId(latestContest.link));
+export const getLatestContestId = async () =>
+  getContestId((await getLatestContest()).link);
 
-export const allTeamsTopListPage = () =>
-  getLatestContest()
-    .then((latestContest) => kkPageUrlStart + latestContest.link + '?sort=rank&order=asc');
+export const allTeamsTopListPage = async () =>
+  kkPageUrlStart + (await getLatestContest()).link + '?sort=rank&order=asc';
 
-export const largeTeamsTopListPage = () =>
-  getLatestContest()
-    .then((latestContest) => kkPageUrlStart + latestContest.link + 'large/?sort=rank&order=asc');
+export const largeTeamsTopListPage = async () =>
+  kkPageUrlStart + (await getLatestContest()).link + 'large/?sort=rank&order=asc';
 
-export const powerTeamsTopListPage = () =>
-getLatestContest()
-  .then((latestContest) => kkPageUrlStart + latestContest.link + 'power/?sort=rank&order=asc');
+export const powerTeamsTopListPage = async () =>
+  kkPageUrlStart + (await getLatestContest()).link + 'power/?sort=rank&order=asc';
 
-export const smallTeamsTopListPage = () =>
-getLatestContest()
-  .then((latestContest) => kkPageUrlStart + latestContest.link + 'small/?sort=rank&order=asc');
+export const smallTeamsTopListPage = async () =>
+  kkPageUrlStart + (await getLatestContest()).link + 'small/?sort=rank&order=asc';

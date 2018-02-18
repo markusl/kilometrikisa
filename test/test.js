@@ -97,7 +97,7 @@ describe('kilometrikisa tests', function() {
 
   it('fetchProfilePage fails', async function() {
     this.timeout(10000);
-    return Kilometrikisa.fetchProfilePage(kktestLogin, kktestPw).then((user) => {
+    return Kilometrikisa.fetchProfilePage().then((user) => {
       expect('should have failed').to.equal('');
     }).catch(() => {
       console.log('fetchProfilePage failed as expected');
