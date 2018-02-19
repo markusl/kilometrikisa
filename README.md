@@ -61,7 +61,8 @@ Kilometrikisa.login(kktestLogin, kktestPw)
 
 ```javascript
 const n = 2;
-const teams = await Kilometrikisa.getTeamInfoPages(Kilometrikisa.allTeamsTopListPage, n);
+const page = await Kilometrikisa.allTeamsTopListPage();
+const teams = await Kilometrikisa.getTeamInfoPages(page, n);
 console.log(teams);
 ```
 
@@ -94,4 +95,13 @@ Kilometrikisa.login('username', 'password')
   .then((result) => {
     console.log(result[0].teamName + ' ' result[0].contest + ' ' + result[0].time);
 });
+```
+
+### Get the latest contest information
+
+```javascript
+const contests = await Kilometrikisa.getAllContests();
+const latest = contests[0];
+console.log(latest.name); //  Talvikilometrikisa 2018
+console.log(latest.link); // /contests/talvikilometrikisa-2018/teams/
 ```
