@@ -91,8 +91,8 @@ describe('kilometrikisa tests', function() {
     const n = 4;
     const page = await Kilometrikisa.allTeamsTopListPage();
     const teams = await Kilometrikisa.getTeamInfoPages(page, n);
-    console.log(teams[99]);
-    expect(teams).to.have.length(n * 50);
+
+    expect(teams.length).to.be.at.least(50);
   });
 
   it('fetchProfilePage fails', async function() {
@@ -113,37 +113,34 @@ describe('kilometrikisa tests', function() {
       .catch(() => console.log('Login failed as expected'));
   });
 
-  it('fetchTeamUrl', async function() {
-    this.timeout(10000);
-    return Kilometrikisa.login(kktestLogin, kktestPw)
-      .then(() => Kilometrikisa.fetchTeamUrl())
-      .then((teamUrl) => {
-        expect(teamUrl).to.equal('/teams/talvikisa-2018/talvikilometrikisa-2018');
-    });
-  });
-
   it('getContests', async function() {
     this.timeout(10000);
     return Kilometrikisa.login(kktestLogin, kktestPw)
       .then(() => Kilometrikisa.getContests())
       .then((result) => {
-        expect(result).to.have.length(2);
-        expect(result[0].teamName).to.equal('Talvikisa 2018');
-        expect(result[0].contest).to.equal('Talvikilometrikisa 2018');
-        expect(result[0].time).to.equal('01.01.2018 – 28.02.2018');
-        expect(result[1].teamName).to.equal('joukkue1234');
-        expect(result[1].contest).to.equal('Kilometrikisa 2017');
-        expect(result[1].time).to.equal('01.05.2017 – 22.09.2017');
+        expect(result).to.have.length(3);
+        expect(result[1].teamName).to.equal('Talvikisa 2018');
+        expect(result[1].contest).to.equal('Talvikilometrikisa 2018');
+        expect(result[1].time).to.equal('01.01.2018 – 28.02.2018');
+        expect(result[1].year).to.equal('2018');
+        expect(result[1].link).to.equal('/teams/talvikisa-2018/talvikilometrikisa-2018/');
+
+        expect(result[2].teamName).to.equal('joukkue1234');
+        expect(result[2].contest).to.equal('Kilometrikisa 2017');
+        expect(result[2].time).to.equal('01.05.2017 – 22.09.2017');
+        expect(result[2].year).to.equal('2017');
+        expect(result[2].link).to.equal('/teams/joukkue1234/kilometrikisa-2017/');
     });
   });
 
   it('fetchTeam', async function() {
     this.timeout(10000);
     return Kilometrikisa.login(kktestLogin, kktestPw)
-      .then(() => Kilometrikisa.fetchTeamResults())
+      .then(() => Kilometrikisa.getContests())
+      .then((contests) => Kilometrikisa.fetchTeamResults(contests[0]))
       .then((teamResults) => {
-        expect(teamResults.name).to.equal('Talvikisa 2018');
-        expect(teamResults.results).to.have.length(2);
+        expect(teamResults.name).to.equal('Kesäkuntoilijat');
+        expect(teamResults.results).to.have.length(1);
         expect(teamResults.results[0].rank).to.equal(1);
         console.log(teamResults);
     });
@@ -153,27 +150,27 @@ describe('kilometrikisa tests', function() {
     this.timeout(10000);
     const contests = await Kilometrikisa.getAllContests();
     expect(contests.length).to.be.at.least(10);
-    expect(contests[1].name).to.equal('Koulujen kilometrikisa 2017');
-    expect(contests[1].link).to.equal('/contests/koulujen-kilometrikisa-2017/teams/');
+    expect(contests[1].name).to.equal('Talvikilometrikisa 2018');
+    expect(contests[1].link).to.equal('/contests/talvikilometrikisa-2018/teams/');
   });
 
   it('getLatestContest', async function() {
     this.timeout(10000);
     const contest = await Kilometrikisa.getLatestContest();
-    expect(contest.name).to.equal('Talvikilometrikisa 2018');
-    expect(contest.link).to.equal('/contests/talvikilometrikisa-2018/teams/');
+    expect(contest.name).to.equal('Kilometrikisa 2018');
+    expect(contest.link).to.equal('/contests/kilometrikisa-2018/teams/');
   });
 
   it('getContestId', async function() {
     this.timeout(10000);
     const contests = await Kilometrikisa.getAllContests();
     const contestId = await Kilometrikisa.getContestId(contests[0].link);
-    expect(contestId).to.equal('30');
+    expect(contestId).to.equal('31');
   });
 
   it('getLatestContestId', async function() {
     this.timeout(10000);
     const contestId = await Kilometrikisa.getLatestContestId();
-    expect(contestId).to.equal('30');
+    expect(contestId).to.equal('31');
   });
 });

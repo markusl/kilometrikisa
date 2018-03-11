@@ -6,7 +6,6 @@ import * as R from 'ramda';
 import axiosCookieJarSupport from '@3846masa/axios-cookiejar-support';
 
 const kkPageUrlStart = 'https://www.kilometrikisa.fi';
-const accountPageUrl = kkPageUrlStart + '/accounts/index/';
 const loginPageUrl = kkPageUrlStart + '/accounts/login/';
 const myTeamsUrl = kkPageUrlStart + '/accounts/myteams/';
 const profilePageUrl = kkPageUrlStart + '/accounts/profile/';
@@ -153,36 +152,26 @@ export const getContests = async () => {
   const results = contestRows
     .map((i, elem) => {
       const columns = toColumns($, elem);
+      const link = $(elem).children().find('a').first().attr('href');
+      const contestName = columns[1].toString();
       return {
         teamName: columns[0].trim(),
-        contest: columns[1],
+        contest: contestName,
+        year: contestName.substr(contestName.length - 4),
         time: columns[2],
+        link: link,
       };
     }
   );
   return results.toArray();
 };
 
-/** Fetch url to own team page.
- * @return {Promise} */
-export const fetchTeamUrl = () =>
-  (new Promise(async (res, rej) => {
-    const response = await axios.get(accountPageUrl, axiosRequestWithAuth);
-    const $ = cheerio.load(response.data, { normalizeWhitespace: true });
-    const linkList = $('.tm-box').find('div').children();
-    if (linkList.length === 4) {
-      res(linkList[2].attribs.href);
-    } else {
-      rej('User not logged in');
-    }
-  }));
-
 const onlyNumbers = (str) => str.replace(/[^\d.,-]/g, '').replace(',', '.');
 const trimPersonName = (name) => name.trim().split('\n')[0].trim();
 
-/* Fetch own team results. Currently Kilometrikisa does not let access other team's data. */
-export const fetchTeamResults = async () => {
-  const teamUrl = await fetchTeamUrl();
+/* Fetch own team results for the specified contest returned by getContests. Currently Kilometrikisa does not let access other team's data. */
+export const fetchTeamResults = async (contest) => {
+  const teamUrl = contest.link;
   const response = await axios.get(kkPageUrlStart + teamUrl, axiosRequestWithAuth);
   const $ = cheerio.load(response.data, { normalizeWhitespace: false });
 
@@ -242,7 +231,9 @@ export const getTeamInfoPage = async (page, n = 0) => {
 export const getTeamInfoPages = (page, n) =>
   Promise.all(
     [...Array(n).keys()]
-    .map((n) => getTeamInfoPage(page, n)))
+    .map((n) => getTeamInfoPage(page, n))
+    .map((p) => p.catch((e) => []))
+  )
   .then(R.flatten);
 
 /** Lists all contests that are available on the site.

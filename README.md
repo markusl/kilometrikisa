@@ -66,11 +66,12 @@ const teams = await Kilometrikisa.getTeamInfoPages(page, n);
 console.log(teams);
 ```
 
-### Fetch detailed information for the team where specified user belongs to.
+### Fetch detailed information for the team where the user belongs to
 
 ```javascript
 Kilometrikisa.login('username', 'password')
-  .then(() => Kilometrikisa.fetchTeamResults())
+  .then(() => Kilometrikisa.getContests())
+  .then((contests) => Kilometrikisa.fetchTeamResults(contests[0]))
   .then(teamResults => {
     console.log(teamResults.name);
     console.log(teamResults.results);
@@ -94,6 +95,7 @@ Kilometrikisa.login('username', 'password')
   .then(() => Kilometrikisa.getContests())
   .then((result) => {
     console.log(result[0].teamName + ' ' result[0].contest + ' ' + result[0].time);
+    console.log(result[0].link);
 });
 ```
 
