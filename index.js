@@ -149,21 +149,29 @@ export const getContests = async () => {
   const response = await axios.get(myTeamsUrl, axiosRequestWithAuth);
   const $ = cheerio.load(response.data, { normalizeWhitespace: false });
   const contestRows = $('#teams').find('tbody').children();
-  const results = contestRows
+  const rows = contestRows
     .map((i, elem) => {
       const columns = toColumns($, elem);
       const link = $(elem).children().find('a').first().attr('href');
-      const contestName = columns[1].toString();
       return {
         teamName: columns[0].trim(),
-        contest: contestName,
-        year: contestName.substr(contestName.length - 4),
+        contest: columns[1],
         time: columns[2],
         link: link,
       };
     }
   );
-  return results.toArray();
+  const results = rows.toArray()
+    .map(async (row) => {
+      const contestNameStart = row.link.lastIndexOf('/', row.link.length - 2);
+      const year = row.contest.substr(row.contest.length - 4);
+      const contestId = await getContestId('/contests' + row.link.substr(contestNameStart) + 'teams/');
+      return Object.assign(row, {
+        year: year,
+        contestId: contestId,
+      });
+    });
+  return await Promise.all(results);
 };
 
 const onlyNumbers = (str) => str.replace(/[^\d.,-]/g, '').replace(',', '.');

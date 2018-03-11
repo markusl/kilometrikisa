@@ -1,6 +1,6 @@
 {
   "name": "kilometrikisa",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Provides access to Kilometrikisa.fi information",
   "main": "index.js",
   "scripts": {

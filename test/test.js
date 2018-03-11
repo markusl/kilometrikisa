@@ -123,12 +123,14 @@ describe('kilometrikisa tests', function() {
         expect(result[1].contest).to.equal('Talvikilometrikisa 2018');
         expect(result[1].time).to.equal('01.01.2018 – 28.02.2018');
         expect(result[1].year).to.equal('2018');
+        expect(result[1].contestId).to.equal('30');
         expect(result[1].link).to.equal('/teams/talvikisa-2018/talvikilometrikisa-2018/');
 
         expect(result[2].teamName).to.equal('joukkue1234');
         expect(result[2].contest).to.equal('Kilometrikisa 2017');
         expect(result[2].time).to.equal('01.05.2017 – 22.09.2017');
         expect(result[2].year).to.equal('2017');
+        expect(result[2].contestId).to.equal('22');
         expect(result[2].link).to.equal('/teams/joukkue1234/kilometrikisa-2017/');
     });
   });
