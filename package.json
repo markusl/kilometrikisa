@@ -4,27 +4,27 @@
   "description": "Provides access to Kilometrikisa.fi information",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --require babel-core/register test/*.js"
+    "test": "mocha --require @babel/register test/*.js"
   },
   "devDependencies": {
-    "babel-core": "^6.26.0",
-    "babel-loader": "^7.1.4",
-    "babel-polyfill": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
-    "chai": "^4.1.2",
+    "@babel/core": "^7.1.5",
+    "@babel/preset-env": "^7.1.5",
+    "@babel/register": "^7.0.0",
+    "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "eslint": "^4.18.2",
-    "eslint-config-google": "^0.9.1",
-    "eslint-plugin-mocha": "^4.12.1",
-    "mocha": "^5.0.4",
+    "eslint": "^5.9.0",
+    "eslint-config-google": "^0.11.0",
+    "eslint-plugin-mocha": "^5.2.0",
+    "mocha": "^5.2.0",
     "tough-cookie": "^2.3.4"
   },
   "dependencies": {
-    "@3846masa/axios-cookiejar-support": "0.0.5",
+    "@3846masa/axios-cookiejar-support": "0.4.2",
+    "@babel/polyfill": "^7.0.0",
     "axios": "^0.18.0",
-    "cheerio-without-node-native": "^0.20.2",
+    "cheerio-without-node-native": "^1.0.0-rc.2",
     "htmlparser2-without-node-native": "3.9.2",
-    "query-string": "^5.1.0",
+    "query-string": "^6.2.0",
     "ramda": "^0.25.0"
   },
   "keywords": [

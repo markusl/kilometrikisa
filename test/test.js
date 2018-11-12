@@ -1,5 +1,5 @@
 'use strict';
-import 'babel-polyfill';
+import '@babel/polyfill';
 import * as Kilometrikisa from '../index';
 import * as chai from 'chai';
 import * as tough from 'tough-cookie';
@@ -152,27 +152,28 @@ describe('kilometrikisa tests', function() {
     this.timeout(10000);
     const contests = await Kilometrikisa.getAllContests();
     expect(contests.length).to.be.at.least(10);
-    expect(contests[1].name).to.equal('Talvikilometrikisa 2018');
-    expect(contests[1].link).to.equal('/contests/talvikilometrikisa-2018/teams/');
+    const contest = contests.find((c) => c.name === 'Kilometrikisa 2018')
+    expect(contest).to.not.be.null;
+    expect(contest.link).to.equal('/contests/talvikilometrikisa-2018/teams/');
   });
 
   it('getLatestContest', async function() {
     this.timeout(10000);
     const contest = await Kilometrikisa.getLatestContest();
-    expect(contest.name).to.equal('Kilometrikisa 2018');
-    expect(contest.link).to.equal('/contests/kilometrikisa-2018/teams/');
+    expect(contest.name).to.equal('Koulujen kilometrikisa 2018');
+    expect(contest.link).to.equal('/contests/koulujen-kilometrikisa-2018/teams/');
   });
 
   it('getContestId', async function() {
     this.timeout(10000);
     const contests = await Kilometrikisa.getAllContests();
     const contestId = await Kilometrikisa.getContestId(contests[0].link);
-    expect(contestId).to.equal('31');
+    expect(contestId).to.equal('33');
   });
 
   it('getLatestContestId', async function() {
     this.timeout(10000);
     const contestId = await Kilometrikisa.getLatestContestId();
-    expect(contestId).to.equal('31');
+    expect(contestId).to.equal('33');
   });
 });
