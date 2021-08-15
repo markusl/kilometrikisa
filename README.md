@@ -78,13 +78,13 @@ Kilometrikisa.login('username', 'password')
 });
 ```
 
-### Update information to the contest log.
+### Update information to the contest log
 
 Note that this API will only work when the contest is active.
 
 ```javascript
 Kilometrikisa.login('username', 'password')
-  .then(() => Kilometrikisa.updateLog('2017-08-22', 100.5))
+  .then(() => Kilometrikisa.updateLog('2021-08-22', 100.5))
   .then(() => console.log('Log updated'));
 ```
 
@@ -104,6 +104,6 @@ Kilometrikisa.login('username', 'password')
 ```javascript
 const contests = await Kilometrikisa.getAllContests();
 const latest = contests[0];
-console.log(latest.name); //  Talvikilometrikisa 2018
-console.log(latest.link); // /contests/talvikilometrikisa-2018/teams/
+console.log(latest.name); //  Talvikilometrikisa 2021
+console.log(latest.link); // /contests/talvikilometrikisa-2021/teams/
 ```

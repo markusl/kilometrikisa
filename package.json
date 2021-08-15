@@ -1,31 +1,41 @@
 {
   "name": "kilometrikisa",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "description": "Provides access to Kilometrikisa.fi information",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --require @babel/register test/*.js"
+    "build": "tsc",
+    "test": "jest"
   },
   "devDependencies": {
-    "@babel/core": "^7.1.5",
-    "@babel/preset-env": "^7.1.5",
-    "@babel/register": "^7.0.0",
-    "chai": "^4.2.0",
+    "@babel/core": "^7.15.0",
+    "@babel/preset-env": "^7.15.0",
+    "@babel/register": "^7.15.3",
+    "@jest/types": "^27.0.6",
+    "@types/jest": "^26.0.24",
+    "@types/node": "^16.6.1",
+    "@types/ramda": "^0.27.44",
+    "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
-    "eslint": "^5.9.0",
-    "eslint-config-google": "^0.11.0",
-    "eslint-plugin-mocha": "^5.2.0",
-    "mocha": "^5.2.0",
-    "tough-cookie": "^2.3.4"
+    "eslint": "^7.32.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-mocha": "^9.0.0",
+    "jest": "^27.0.6",
+    "mocha": "^9.0.3",
+    "tough-cookie": "^4.0.0",
+    "ts-jest": "^27.0.4",
+    "ts-node": "^10.2.0",
+    "typescript": "^4.3.5"
   },
   "dependencies": {
-    "@3846masa/axios-cookiejar-support": "0.4.2",
-    "@babel/polyfill": "^7.0.0",
-    "axios": "^0.18.0",
-    "cheerio-without-node-native": "^1.0.0-rc.2",
+    "@babel/polyfill": "^7.12.1",
+    "@types/tough-cookie": "^4.0.1",
+    "axios": "^0.21.1",
+    "axios-cookiejar-support": "1.0.1",
+    "cheerio": "^1.0.0-rc.10",
     "htmlparser2-without-node-native": "3.9.2",
-    "query-string": "^6.2.0",
-    "ramda": "^0.25.0"
+    "query-string": "^7.0.1",
+    "ramda": "^0.27.1"
   },
   "keywords": [
     "kilometrikisa"
